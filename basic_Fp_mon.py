@@ -33,16 +33,7 @@ class Fp:
             ad += 1
             # print("c0=%x,\nc1=%x\n"%(c0,c1))
             return c
-        ''' 
-        def addi(self, other):
-            # 自定义加法，不触发统计
-            a = self.a
-            b = other.a
-            c = a + b
-            c = Fp(c)
-            #print('addi (no count) %05x %05x %05x' % (c.adrs, self.adrs, other.adrs))
-            return c
-        '''
+       
         def __sub__(self, other):
             global s
             a = self.a
@@ -68,42 +59,6 @@ class Fp:
                 # print("%x\n%x"%(c0,c1))
                 return c
             raise TypeError(f"Unsupported operand type(s) for *: 'Fp' and '{type(other).__name__}'")
-        
- 
-            
-        '''
-        def __mul_add__(self, other, addend):
-            global ma
-            a = self.a
-            b = other.a
-            c = addend.a
-
-            # 计算 a * b + c，并取模 p
-            d = a * b + c
-            d = Fp(d)
-
-            # 记录操作
-            print('mul_add %05x %05x %05x %05x %d' % (d.adrs, self.adrs, other.adrs, addend.adrs, m))
-            Note.write('mul_add %05d %05d %05d %05d %d\n' % (d.adrs, self.adrs, other.adrs, addend.adrs, m))
-            ma += 1
-            return d
-        
-        def __mul_and__(self, other, addend):
-            global m
-            a = self.a
-            b = other.a
-            c = addend.a
-
-            # 计算 a * b + c，并取模 p
-            d = a * b  % c
-            d = Fp(d)
-
-            # 记录操作
-            print('mul_add %05x %05x %05x %05x %d' % (d.adrs, self.adrs, other.adrs, addend.adrs, m))
-            Note.write('mul_add %05d %05d %05d %05d %d\n' % (d.adrs, self.adrs, other.adrs, addend.adrs, m))
-            m += 1
-            return d
-        '''
         def __mod__(self, other):
             if isinstance(other, int):  # 如果与 int 进行模运算
                 return Fp(self.a % other)
@@ -268,58 +223,6 @@ def r128_mon_mul(a, b, w=128):
     Note.write('mul %05d %05d %05d %d\n' % (s.adrs, a.adrs, b.adrs, m))
     return s  
     
-
-
-
-'''
-def r128_mon_mul(a, b, w=128):
-
-        m = 0xB640000002A3A6F1D603AB4FF58EC74521F2934B1A7AEEDBE56F9B27E351457D
-        a0 = Fp(a & ((1 << w) - 1)) 
-        a1 = Fp(a >> w)
-        b0 = Fp(b & ((1 << w) - 1))
-        b1 = Fp(b >> w)
-
-        m0 = Fp(m & ((1 << w) - 1))
-        m1 = Fp(m >> w)
-        
-        m_prime = pow(-m0.a, -1, 1 << w)
-        m_p = Fp(m_prime)
-
-        z0 = Fp(0)
-        z1 = Fp(0)
-        #first round
-        t1 = Fp(a0 * b0 + z0)
-        t2 = Fp(1 << w)
-        q0 = Fp(t1 * m_p % t2)
-        c0 = q0 * m0 + t1
-        t1 = a0 * b1 + z1
-        t3 = Fp(c0 >> w)
-        t4 = t1 + t3
-        c1 = q0 * m1 + t4
-        z0 = c1 & ((1 << w) - 1)
-        z1 = c1 >> w
-        #second round
-        t1 = a1 * b0 + z0
-        t2 = 1 << w
-        q1 = t1 * m_p % t2
-        c0 = q1 * m0 + t1 
-        t1 = a1 * b1 + z1
-        t3 = c0 >> w
-        t4 = t1 + t3
-        c1 = q1 * m1 + t4
-        z0 = c1 & ((1 << w) - 1)
-        z1 = c1 >> w
-        #result
-        S = z1 << w | z0 
-        if S >= m:
-            S -= m
-
-        return S
-    '''
-
-
-
 def fp2_add(a0, a1, b0, b1):
     c0 = a0 + b0
     c1 = a1 + b1
@@ -349,7 +252,6 @@ def fp2_mult(a0, a1, b0, b1):
 
     t0 = c2 - t0
     t1 = c0 - t1
-    #print("%x\n%x"%(Fp.czy(c0),Fp.czy(c1)))
     return t1, t0
 
 '''

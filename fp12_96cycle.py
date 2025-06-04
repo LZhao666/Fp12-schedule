@@ -21,58 +21,29 @@ S = Scenario('20*fp12',horizon=horizon)
 ADD = S.Resources('ADD',num=6)   #加法
 MUL = S.Resources('MUL',num=6)  #乘法
 
-
 mud = S.Tasks('mud',num=108,length=2,delay_cost=1)
 mod = S.Tasks('mod',num=108,length=2,delay_cost=1)
 mdd = S.Tasks('mdd',num=108,length=2,delay_cost=1)
 mld = S.Tasks('mld',num=108,length=2,delay_cost=1)
 mrd = S.Tasks('mrd',num=108,length=2,delay_cost=1)
 
-
 add = S.Tasks('add',num=134,delay_cost=1)
-#A += alt(R)
 sub = S.Tasks('sub',num=134,delay_cost=1)
-
-
 
 for i in range(0,108):
 	mud[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]
-'''
-|MUL[6]|MUL[7]|MUL[8]|MUL[9]
-'''	
-
-
 for i in range(0,108):
 	mod[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]
-	
-'''
-|MUL[6]|MUL[7]|MUL[8]|MUL[9]
-'''	
 for i in range(0,108):
 	mld[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]
-'''
-|MUL[6]|MUL[7]|MUL[8]|MUL[9]
-'''	
 for i in range(0,108):
-	mrd[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]
-'''
-|MUL[6]|MUL[7]|MUL[8]|MUL[9]
-'''		
+	mrd[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]	
 for i in range(0,108):
 	mdd[i] += MUL[0]|MUL[1]|MUL[2]|MUL[3]|MUL[4]|MUL[5]
-'''
-|MUL[6]|MUL[7]|MUL[8]|MUL[9]
-'''
 for i in range(0,134):
 	add[i] += ADD[0]|ADD[1]|ADD[2]|ADD[3]|ADD[4]|ADD[5]
-'''	
-   |ADD[6]|ADD[7] 
-    '''
 for i in range(0,134):
 	sub[i] += ADD[0]|ADD[1]|ADD[2]|ADD[3]|ADD[4]|ADD[5]
-'''
-  |ADD[6]|ADD[7] 
-    '''
 
 S += mld[0] < mod[0]
 S += mld[0] < mud[0]
@@ -2427,26 +2398,12 @@ dependencies = [
 
 
 ]
-'''
-f = open('3.txt', 'r', encoding='utf-8')
-line = f.readline() # 读取第一行
-while line:
-    txt_data = eval(line) # 可将字符串变为元组
-    dependencies.append(txt_data) # 列表增加
-    line = f.readline() # 读取下一行
-#print(dependencies)359
-'''
 for op1, op2 in dependencies:
 	if op1 in adjusted_schedule and op2 in adjusted_schedule:
 		if adjusted_schedule[op1][1] < adjusted_schedule[op2][0]:
 				adjusted_schedule[op1][1] = adjusted_schedule[op2][0]
 		else:
 			adjusted_schedule[op1][1] = adjusted_schedule[op1][1]
-
-'''
-#打印寄存器的活跃区间
-print(adjusted_schedule)
-'''
 
 max_registers = 300
 
@@ -2465,40 +2422,6 @@ def allocate_registers(adjusted_schedule):
     colors = nx.coloring.greedy_color(live_ranges)
     return colors
 
-'''
-def allocate_registers(adjusted_schedule, G, max_registers):
-    active_registers = {}
-    register_allocation = {}
-    dependencies = {}
-    available_registers = list(range(max_registers))
-
-    # 按操作的开始时间排序
-    sorted_operations = sorted(adjusted_schedule.keys(), key=lambda op: adjusted_schedule[op][0])
-    
-
-    for op in sorted_operations:
-        start_time, end_time = adjusted_schedule[op]
-
-        # 释放生命周期结束的寄存器
-        for active_op in list(active_registers.keys()):
-            if adjusted_schedule[active_op][1] <= start_time:
-                available_registers.append(active_registers[active_op])
-                del active_registers[active_op]
-
-        if available_registers:
-            assigned_register = available_registers.pop(0)
-        else:
-            raise ValueError("No available registers. Increase max_registers to satisfy the requirements.")
-        
-        register_allocation[op] = assigned_register
-        active_registers[op] = assigned_register
-
-        dependencies[op] = [(pred, register_allocation[pred]) for pred in G.predecessors(op) if pred in register_allocation]
-
-    return register_allocation, dependencies
-
-'''
-# 迭代优化
 def iterative_optimization(adjusted_schedule, max_registers):
     best_registers = None
     min_end_time = float('inf')
@@ -2520,92 +2443,6 @@ def iterative_optimization(adjusted_schedule, max_registers):
 
     return adjusted_schedule, best_registers
 
-
-# 运行迭代优化
-best_schedule, best_registers = iterative_optimization(adjusted_schedule, max_registers)
-
-'''
-for op in adjusted_schedule.keys():
-    if op in best_registers:
-        reg = best_registers[op]
-        
-        # 获取当前操作的所有直接依赖项
-        dependencies_for_op = [dep_op for dep_op, dep in dependencies if dep == op]
-
-        # 根据操作类型选择符号
-        if op.startswith('sub'):
-            operator = ' - '
-        elif op.startswith('mul'):
-            operator = ' * '
-        elif op.startswith('add'):
-            operator = ' + '
-        else:
-            operator = ' , '  # 默认使用逗号
-
-        # 构造 dependencies_str
-        if not dependencies_for_op:
-            # 没有依赖项时
-            dependencies_str = ""
-        elif len(dependencies_for_op) == 1:
-            # 一个依赖项时，与自身运算
-            dep_str = f"r{best_registers[dependencies_for_op[0]]}"
-            dependencies_str = f"{dep_str}{operator}{dep_str}"
-        else:
-            # 多个依赖项时，使用操作符连接
-            dependencies_str = operator.join(
-                f"r{best_registers[dep_op]}" for dep_op in dependencies_for_op if dep_op in best_registers
-            )
-
-        # 打印结果
-        print(f"r{reg} = {dependencies_str}     #{op}")
-'''
-
-
-'''
-for op, reg in best_registers.items():
-    # 获取当前操作的所有直接依赖项
-    dependencies_for_op = [dep_op for dep_op, dep in dependencies if dep == op]
-    dependencies_str = ' , '.join(
-        f"r{best_registers[dep_op]}" for dep_op in dependencies_for_op if dep_op in best_registers
-    )
-    print(f"r{reg}={dependencies_str} #{op}")
-
-'''    
-
-'''
-def plot_register_allocation(adjusted_schedule, register_allocation):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    color_palette = [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-        "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5254a3", "#6b6ecf", "#9c9ede", "#637939", "#8ca252",
-        "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39", "#e7ba52", "#e7cb94", "#843c39", "#ad494a", "#d6616b", "#e7969c",
-        "#7b4173", "#a55194", "#ce6dbd", "#de9ed6", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#e6550d", "#fd8d3c",
-        "#fdae6b", "#fdd0a2", "#31a354", "#74c476", "#a1d99b", "#c7e9c0", "#756bb1", "#9e9ac8", "#bcbddc", "#dadaeb",
-        "#636363", "#969696", "#bdbdbd", "#d9d9d9", "#393b79", "#5254a3", "#6b6ecf", "#9c9ede", "#637939", "#8ca252",
-        "#b5cf6b", "#cedb9c", "#8c6d31", "#bd9e39", "#e7ba52", "#e7cb94", "#843c39", "#ad494a", "#d6616b", "#e7969c",
-        "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
-    ]
-    
-    for op, (start, end) in adjusted_schedule.items():
-        reg = register_allocation[op]
-        ax.barh(reg, end - start, left=start, height=0.4, label=f"{op} (Reg {reg})", color=random.choice(color_palette))
-        ax.text((start + end) / 2, reg, op, va='center', ha='center', fontsize=10, color='white')
-    
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Register")
-    ax.set_title("Register Allocation Gantt Chart")
-    ax.set_yticks(sorted(set(register_allocation.values())))
-    plt.grid(True, linestyle="--", alpha=0.6)
-    plt.show()
-
-# 计算寄存器分配
-register_allocation = allocate_registers(adjusted_schedule)
-plot_register_allocation(adjusted_schedule, register_allocation)
-'''
-
-
-
 print("\nRegister Allocation:")
 for op, reg in best_registers.items():
     # 获取当前操作的所有直接依赖项
@@ -2614,11 +2451,6 @@ for op, reg in best_registers.items():
         f"{dep_op} (reg {best_registers[dep_op]})" for dep_op in dependencies_for_op if dep_op in best_registers
     )
     print(f"{op}:reg{reg}={dependencies_str}")
-
-
-
-
-
 
 ######打印图形
 #if solvers.mip.solve(S, msg=0):
@@ -2634,34 +2466,3 @@ else:
 	print('no solution found')
 	#assert(1==0)
 
-
-
-'''
-# 获取 Matplotlib 对象
-if solvers.cpoptimizer.solve(S, msg=0):
-    if ('--test', '') in opts:
-        assert(mud.start_value == 0)
-        
-		
-    else:
-        # 绘制并自定义甘特图
-        import matplotlib.pyplot as plt
-        fig, ax = plotters.matplotlib.plot(
-            S,
-            fig_size=(40, 25),
-            vertical_text=True,
-
-            color={'Setup': '#FFA500', 'Processing': '#4B0082'},  # 按任务名称着色
-            show=["tasks"],
-            return_objects=True
-        )
-        
-        # 进一步调整
-        ax.set_xlabel("Timeline", fontsize=16)
-        ax.tick_params(axis='both', labelsize=12)
-        plt.setp(ax.get_yticklabels(), rotation=45)  # 调整 Y 轴标签角度
-        
-        plt.savefig("gantt.png")  # 保存为文件
-        plt.show()
-else:
-    print('no solution found')'''
